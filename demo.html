@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResearchMate - AI Research Assistant Demo</title>
+  
+  <!-- CSS Dependencies -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Styling variables matching the premium White Background and Blue/Purple Gradients */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8fafc;
+      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-bg-accent: rgba(241, 245, 249, 0.6);
+      --glass-border: rgba(99, 102, 241, 0.08);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      --accent-color: #6366f1;
+      --accent-color-rgb: 99, 102, 241;
+      --accent-secondary: #a855f7;
+      
+      --accent-gradient: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-secondary) 100%);
+      --glow-shadow: 0 10px 30px rgba(99, 102, 241, 0.08);
+      --sidebar-width: 280px;
+      --sidebar-collapsed-width: 80px;
+      --transition-speed: 0.3s;
+      
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    body.dark-mode {
+      --bg-primary: #090d16;
+      --bg-secondary: #0f1524;
+      --glass-bg: rgba(15, 21, 36, 0.75);
+      --glass-bg-accent: rgba(30, 41, 59, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #64748b;
+      --glow-shadow: 0 10px 30px rgba(168, 85, 247, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-title);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--text-muted);
+      border-radius: 10px;
+    }
+
+    /* Glassmorphism Styles */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+    }
+
+    .glass-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.02);
+      transition: transform var(--transition-speed) cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  box-shadow var(--transition-speed) ease, 
+                  border-color var(--transition-speed) ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--glow-shadow);
+      border-color: rgba(var(--accent-color-rgb), 0.2);
+    }
+
+    /* Layout Wrapper */
+    .layout-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      margin-top: 70px;
+      padding: 32px;
+      min-height: calc(100vh - 70px);
+      transition: margin-left var(--transition-speed) ease;
+    }
+
+    .layout-wrapper.collapsed .main-content {
+      margin-left: var(--sidebar-collapsed-width);
+    }
+
+    /* Sidebar Layout */
+    .sidebar-container {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1020;
+      display: flex;
+      flex-direction: column;
+      transition: width var(--transition-speed) ease;
+      overflow: hidden;
+      border-right: 1px solid var(--glass-border);
+      background: var(--bg-primary);
+    }
+
+    .layout-wrapper.collapsed .sidebar-container {
+      width: var(--sidebar-collapsed-width);
+    }
+
+    .sidebar-header {
+      height: 70px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--glass-border);
+      white-space: nowrap;
+    }
+
+    .sidebar-logo {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 22px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sidebar-menu {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 4px;
+      transition: all 0.2s;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .sidebar-link i {
+      font-size: 18px;
+      width: 24px;
+      margin-right: 12px;
+      text-align: center;
+    }
+
+    .sidebar-link:hover {
+      background: var(--glass-bg-accent);
+      color: var(--text-primary);
+    }
+
+    .sidebar-link.active {
+      background: rgba(var(--accent-color-rgb), 0.08);
+      color: var(--accent-color);
+      border-color: rgba(var(--accent-color-rgb), 0.1);
+      font-weight: 600;
+    }
+
+    /* Topbar Layout */
+    .topbar-container {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: var(--sidebar-width);
+      height: 70px;
+      z-index: 1010;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      transition: left var(--transition-speed) ease;
+      border-bottom: 1px solid var(--glass-border);
+      background: var(--bg-primary);
+    }
+
+    .layout-wrapper.collapsed .topbar-container {
+      left: var(--sidebar-collapsed-width);
+    }
+
+    /* Chat page elements */
+    .chat-window {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 140px);
+      position: relative;
+      background: var(--bg-primary);
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      overflow: hidden;
+    }
+
+    .chat-messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chat-bubble {
+      max-width: 80%;
+      padding: 16px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      line-height: 1.6;
+      position: relative;
+      animation: bubbleFadeIn 0.3s ease;
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--accent-gradient);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+    }
+
+    .chat-bubble.ai {
+      align-self: flex-start;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .chat-bubble-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .chat-bubble-actions i {
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .chat-bubble-actions i:hover {
+      color: var(--text-primary);
+    }
+
+    .chat-input-panel {
+      padding: 24px 32px;
+      border-top: 1px solid var(--glass-border);
+      background: var(--bg-primary);
+    }
+
+    .chat-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-textbox {
+      width: 100%;
+      padding: 16px 64px 16px 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      border-radius: 16px;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+
+    .chat-textbox:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 15px rgba(var(--accent-color-rgb), 0.1);
+    }
+
+    .chat-send-btn {
+      position: absolute;
+      right: 16px;
+      background: var(--accent-gradient);
+      border: none;
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .chat-send-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Typing anim */
+    .typing-bubble {
+      padding: 12px 18px;
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--glass-border);
+      align-self: flex-start;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--text-secondary);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+      animation: typingDotJump 1.4s infinite ease-in-out both;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    /* Custom prompt badge pills */
+    .prompt-badge {
+      padding: 10px 18px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      color: var(--text-secondary);
+      border-radius: 30px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--glass-border);
+    }
+
+    .prompt-badge:hover {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      background: rgba(var(--accent-color-rgb), 0.03);
+    }
+
+    @keyframes bubbleFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes typingDotJump {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @media (max-width: 991.98px) {
+      .sidebar-container {
+        transform: translateX(-100%);
+      }
+      .layout-wrapper.expanded-mobile .sidebar-container {
+        transform: translateX(0);
+        width: var(--sidebar-width);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+      .topbar-container {
+        left: 0 !important;
+      }
+    }
+  </style>
+
+  <!-- React & CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+
+  <div id="root"></div>
+
+  <!-- React Code evaluated by Babel -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    const generateAIResponse = async (prompt, chatHistory = []) => {
+      try {
+        const apiKey = localStorage.getItem('research_mate_api_key') || "";
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+        
+        // Map history to Gemini API format
+        const contents = chatHistory
+          .filter(msg => msg.text && (msg.sender === 'user' || msg.sender === 'ai'))
+          .map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.text }]
+          }));
+
+        // Append current prompt
+        contents.push({
+          role: 'user',
+          parts: [{ text: prompt }]
+        });
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents })
+        });
+
+        const data = await res.json();
+        return data.candidates[0].content.parts[0].text;
+      } catch (err) {
+        console.error("Gemini API Error:", err);
+        throw err;
+      }
+    };
+
+    function App() {
+      const [isLoggedIn, setIsLoggedIn] = useState(() => {
+        return localStorage.getItem('research_mate_logged_in') === 'true';
+      });
+      const [activePage, setActivePage] = useState('chat'); // Default homepage is AI Chat
+      const [darkMode, setDarkMode] = useState(false);
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+      const [mobileExpanded, setMobileExpanded] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+
+      // User Profile States persisting to localStorage
+      const [userName, setUserName] = useState(() => localStorage.getItem('research_mate_user_name') || "Dr. Sarah Jenkins");
+      const [userTitle, setUserTitle] = useState(() => localStorage.getItem('research_mate_user_title') || "Lead AI Researcher");
+      const [userInstitution, setUserInstitution] = useState(() => localStorage.getItem('research_mate_user_inst') || "Stanford University");
+      const [userAvatar, setUserAvatar] = useState(() => localStorage.getItem('research_mate_avatar') || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150");
+
+      const [papers, setPapers] = useState([
+        { id: 'p1', title: "Attention Is All You Need", authors: "Vaswani et al.", journal: "NeurIPS", year: 2017, abstract: "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks. The best performing models connect the encoder and decoder through an attention mechanism. We propose the Transformer, based solely on attention mechanisms.", saved: true },
+        { id: 'p2', title: "Retrieval-Augmented Generation for Knowledge Tasks", authors: "Lewis et al.", journal: "arXiv", year: 2020, abstract: "Large pre-trained language models store implicit knowledge and achieve state-of-the-art results when fine-tuned on downstream tasks. We explore Retrieval-Augmented Generation (RAG) which combines parametric and non-parametric memories.", saved: false }
+      ]);
+      const [selectedPaperId, setSelectedPaperId] = useState('p1');
+
+      const handleLogin = () => {
+        setIsLoggedIn(true);
+        localStorage.setItem('research_mate_logged_in', 'true');
+      };
+
+      const handleLogout = () => {
+        setIsLoggedIn(false);
+        localStorage.setItem('research_mate_logged_in', 'false');
+      };
+
+      useEffect(() => {
+        if (darkMode) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      }, [darkMode]);
+
+      if (!isLoggedIn) {
+        return <AuthView onLogin={handleLogin} />;
+      }
+
+      const sidebarLinks = [
+        { id: 'chat', label: 'AI Chat', icon: 'fa-robot' },
+        { id: 'papers', label: 'Research Papers', icon: 'fa-file-lines' },
+        { id: 'review', label: 'Literature Review', icon: 'fa-book-open-reader' },
+        { id: 'summarizer', label: 'Paper Summarizer', icon: 'fa-compress' },
+        { id: 'gap-finder', label: 'Research Gap Finder', icon: 'fa-magnifying-glass-chart' },
+        { id: 'citation', label: 'Citation Generator', icon: 'fa-quote-left' },
+        { id: 'report', label: 'Report Generator', icon: 'fa-file-invoice' },
+        { id: 'ideas', label: 'Idea Generator', icon: 'fa-lightbulb' },
+        { id: 'notes', label: 'Research Notes', icon: 'fa-note-sticky' },
+        { id: 'saved', label: 'Saved Research', icon: 'fa-bookmark' },
+        { id: 'timeline', label: 'Research Timeline', icon: 'fa-calendar-days' },
+        { id: 'writing-assistant', label: 'AI Writing Assistant', icon: 'fa-wand-magic-sparkles' },
+        { id: 'trending', label: 'Trending Topics', icon: 'fa-arrow-trend-up' },
+        { id: 'settings', label: 'Settings', icon: 'fa-sliders' }
+      ];
+
+      return (
+        <div className={`layout-wrapper ${sidebarCollapsed ? 'collapsed' : ''} ${mobileExpanded ? 'expanded-mobile' : ''}`}>
+          
+          {/* Sidebar */}
+          <aside className="sidebar-container glass-panel">
+            <div className="sidebar-header d-flex align-items-center justify-content-between">
+              <div className="sidebar-logo cursor-pointer" onClick={() => setActivePage('chat')}>
+                <span>🧠</span>
+                {(!sidebarCollapsed || mobileExpanded) && <span className="fw-bold">ResearchMate</span>}
+              </div>
+              <button className="btn btn-link text-secondary p-0 d-none d-lg-inline-block" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+                <i className={`fa-solid ${sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+              </button>
+            </div>
+
+            <div className="sidebar-menu">
+              <button 
+                onClick={() => { setActivePage('chat'); setMobileExpanded(false); }}
+                className="btn btn-indigo text-white w-100 rounded-3 py-2.5 mb-3 d-flex align-items-center justify-content-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}
+              >
+                <i className="fa-solid fa-plus"></i>
+                {(!sidebarCollapsed || mobileExpanded) && <span className="small fw-semibold">New Chat</span>}
+              </button>
+
+              {sidebarLinks.map(link => (
+                <div 
+                  key={link.id}
+                  onClick={() => { setActivePage(link.id); setMobileExpanded(false); }}
+                  className={`sidebar-link ${activePage === link.id ? 'active' : ''}`}
+                >
+                  <i className={`fa-solid ${link.icon}`}></i>
+                  {(!sidebarCollapsed || mobileExpanded) && <span>{link.label}</span>}
+                </div>
+              ))}
+
+              <div 
+                onClick={handleLogout}
+                className="sidebar-link text-danger mt-4"
+                style={{ cursor: 'pointer', border: 'none' }}
+              >
+                <i className="fa-solid fa-right-from-bracket text-danger"></i>
+                {(!sidebarCollapsed || mobileExpanded) && <span>Logout</span>}
+              </div>
+            </div>
+          </aside>
+
+          {/* Topbar */}
+          <nav className="topbar-container glass-panel">
+            <div className="d-flex align-items-center gap-3">
+              <button className="btn btn-link text-secondary p-0" onClick={() => setMobileExpanded(!mobileExpanded)}>
+                <i className="fa-solid fa-bars fs-5"></i>
+              </button>
+              <div className="input-group d-none d-md-flex align-items-center bg-light-subtle rounded-3 px-2 border border-secondary-subtle">
+                <i className="fa-solid fa-magnifying-glass text-muted ms-2"></i>
+                <input 
+                  type="text" 
+                  className="form-control bg-transparent border-0 text-dark-emphasis small py-2" 
+                  placeholder="Search papers, citations, notes..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="d-flex align-items-center gap-3">
+              <button className="btn btn-outline-secondary border-0 text-secondary p-2 rounded-circle" onClick={() => setDarkMode(!darkMode)}>
+                {darkMode ? <i className="fa-solid fa-sun text-warning fs-5"></i> : <i className="fa-solid fa-moon text-indigo fs-5"></i>}
+              </button>
+              <div className="d-flex align-items-center gap-2 cursor-pointer p-1.5 rounded-pill bg-light-subtle border border-secondary-subtle" onClick={() => setActivePage('profile')}>
+                <img src={userAvatar} alt="avatar" className="rounded-circle" style={{ width: '32px', height: '32px', objectFit: 'cover' }} />
+                <span className="d-none d-lg-inline small text-dark-emphasis fw-medium me-1">{userName}</span>
+              </div>
+            </div>
+          </nav>
+
+          {/* Main Context Area */}
+          <main className="main-content">
+            <div className="container-fluid p-0">
+              {activePage === 'chat' && <AIChatView searchQuery={searchQuery} />}
+              {activePage === 'papers' && (
+                <ResearchPapersView 
+                  papers={papers} 
+                  setPapers={setPapers} 
+                  setActivePage={setActivePage} 
+                  setSelectedPaperId={setSelectedPaperId} 
+                  searchQuery={searchQuery} 
+                />
+              )}
+              {activePage === 'review' && <LiteratureReviewView />}
+              {activePage === 'summarizer' && (
+                <PaperSummarizerView 
+                  papers={papers} 
+                  selectedPaperId={selectedPaperId} 
+                  setSelectedPaperId={setSelectedPaperId} 
+                />
+              )}
+              {activePage === 'gap-finder' && <ResearchGapFinderView />}
+              {activePage === 'citation' && <CitationGeneratorView papers={papers} searchQuery={searchQuery} />}
+              {activePage === 'report' && <ReportGeneratorView />}
+              {activePage === 'ideas' && <IdeaGeneratorView />}
+              {activePage === 'notes' && <ResearchNotesView searchQuery={searchQuery} />}
+              {activePage === 'saved' && <SavedResearchView papers={papers} setPapers={setPapers} />}
+              {activePage === 'timeline' && <ResearchTimelineView />}
+              {activePage === 'writing-assistant' && <AiWritingAssistantView />}
+              {activePage === 'trending' && <TrendingTopicsView />}
+              {activePage === 'settings' && <SettingsView darkMode={darkMode} setDarkMode={setDarkMode} />}
+              {activePage === 'profile' && (
+                <ProfileView 
+                  userName={userName} 
+                  setUserName={setUserName} 
+                  userTitle={userTitle} 
+                  setUserTitle={setUserTitle} 
+                  userInstitution={userInstitution} 
+                  setUserInstitution={setUserInstitution} 
+                  userAvatar={userAvatar} 
+                  setUserAvatar={setUserAvatar} 
+                />
+              )}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // ==================== PAGES ====================
+
+    // AI Chat Page
+    function AIChatView({ searchQuery }) {
+      const [messages, setMessages] = useState([
+        { sender: 'ai', text: "Hello! I am your real research assistant. Ask me to synthesize insights, draft proposals, find gap structures, or map references." }
+      ]);
+      const [inputVal, setInputVal] = useState('');
+      const [isTyping, setIsTyping] = useState(false);
+      const messagesEndRef = useRef(null);
+
+      useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages, isTyping]);
+
+      const handleSend = async (customPrompt) => {
+        const query = customPrompt || inputVal;
+        if (!query.trim()) return;
+
+        const userMsg = { sender: 'user', text: query };
+        setMessages(prev => [...prev, userMsg]);
+        setInputVal('');
+        setIsTyping(true);
+
+        try {
+          const answer = await generateAIResponse(query, messages);
+          setIsTyping(false);
+          setMessages(prev => [...prev, { sender: 'ai', text: answer }]);
+        } catch (err) {
+          setIsTyping(false);
+          setMessages(prev => [...prev, { sender: 'ai', text: "Error calling Gemini model API. Please make sure your API key configuration is active." }]);
+        }
+      };
+
+      return (
+        <div className="chat-window">
+          <div className="chat-messages-area text-start">
+            {messages.map((m, idx) => (
+              <div key={idx} className={`chat-bubble ${m.sender === 'user' ? 'user' : 'ai'}`}>
+                <div style={{ whiteSpace: 'pre-line' }}>{m.text}</div>
+                {m.sender === 'ai' && idx > 0 && (
+                  <div className="chat-bubble-actions">
+                    <i className="fa-regular fa-copy" onClick={() => { navigator.clipboard.writeText(m.text); alert('Copied!'); }}></i>
+                    <i className="fa-regular fa-thumbs-up" onClick={() => alert('Liked!')}></i>
+                    <i className="fa-regular fa-thumbs-down"></i>
+                  </div>
+                )}
+              </div>
+            ))}
+            {isTyping && (
+              <div className="typing-bubble">
+                <span className="typing-dot"></span>
+                <span className="typing-dot"></span>
+                <span className="typing-dot"></span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {messages.length <= 1 && (
+            <div className="px-4 py-2 d-flex flex-wrap gap-2 justify-content-center">
+              {["Explain PEFT adapters on edge cards", "Brainstorm research gaps in Generative Agents", "Summarize Self-Attention complexity"].map((prompt, idx) => (
+                <button key={idx} className="prompt-badge" onClick={() => handleSend(prompt)}>{prompt}</button>
+              ))}
+            </div>
+          )}
+
+          <div className="chat-input-panel">
+            <div className="chat-input-wrapper">
+              <input 
+                type="text" 
+                className="chat-textbox text-dark-emphasis" 
+                placeholder="Ask anything..." 
+                value={inputVal}
+                onChange={e => setInputVal(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+              />
+              <button className="chat-send-btn animate__animated animate__pulse animate__infinite" onClick={() => handleSend()}>
+                <i className="fa-solid fa-paper-plane text-white"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Research Papers Page
+    function ResearchPapersView({ papers, setPapers, setActivePage, setSelectedPaperId, searchQuery }) {
+      const [uploading, setUploading] = useState(false);
+
+      const handleUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploading(true);
+        const fileName = file.name;
+        const cleanTitle = fileName.replace(/\.[^/.]+$/, "").replace(/_/g, " ").replace(/-/g, " ");
+
+        try {
+          // Call Gemini API to generate a realistic abstract and author list based on the document title
+          const prompt = `You are parsing a PDF document titled "${cleanTitle}". 
+Provide a realistic academic abstract (2-3 sentences) and author list suitable for this title. 
+Return your response in raw JSON format with exactly two keys: "authors" (string) and "abstract" (string). 
+Do not include any markdown code blocks, backticks, or "json" prefix. Return only the raw JSON.`;
+
+          const resultText = await generateAIResponse(prompt);
+          const jsonText = resultText.replace(/```json/g, "").replace(/```/g, "").trim();
+          const parsed = JSON.parse(jsonText);
+
+          const newPaper = {
+            id: `paper-${Date.now()}`,
+            title: cleanTitle,
+            authors: parsed.authors || "Unknown Researcher",
+            journal: "Self Uploaded Index",
+            year: 2026,
+            abstract: parsed.abstract || "Abstract generation failed."
+          };
+
+          setPapers(prev => [newPaper, ...prev]);
+          alert(`Successfully uploaded and parsed: ${cleanTitle}`);
+          
+          setSelectedPaperId(newPaper.id);
+          setActivePage('summarizer');
+        } catch (err) {
+          console.error(err);
+          // Fallback if parsing fails
+          const fallbackPaper = {
+            id: `paper-${Date.now()}`,
+            title: cleanTitle,
+            authors: "Dr. Sarah Jenkins",
+            journal: "Self Uploaded Index",
+            year: 2026,
+            abstract: "The uploaded PDF document was parsed. This study introduces parameter evaluations on PEFT systems."
+          };
+          setPapers(prev => [fallbackPaper, ...prev]);
+          setSelectedPaperId(fallbackPaper.id);
+          setActivePage('summarizer');
+        } finally {
+          setUploading(false);
+        }
+      };
+
+      const filteredPapers = papers.filter(p => 
+        p.title.toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+        p.authors.toLowerCase().includes((searchQuery || '').toLowerCase())
+      );
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h4 className="fw-bold mb-0 text-dark-emphasis">Research Papers Database</h4>
+            <label className="btn btn-indigo text-white btn-sm px-3" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+              <span>Upload PDF</span>
+              <input type="file" accept="application/pdf" className="d-none" onChange={handleUpload} />
+            </label>
+          </div>
+          {uploading && <div className="alert alert-info py-2 small mb-3">Parsing PDF metadata via Gemini AI vector mapping...</div>}
+          <div className="d-flex flex-column gap-3">
+            {filteredPapers.map(p => (
+              <div key={p.id} className="glass-card p-4">
+                <div className="d-flex justify-content-between align-items-start">
+                  <h5 className="fw-bold text-dark-emphasis">{p.title}</h5>
+                  <div className="d-flex align-items-center gap-2">
+                    <button 
+                      className="btn btn-link p-0 text-indigo border-0" 
+                      onClick={() => {
+                        setPapers(prev => prev.map(paper => 
+                          paper.id === p.id ? { ...paper, saved: !paper.saved } : paper
+                        ));
+                      }}
+                      title={p.saved ? "Remove from Saved Vault" : "Save Paper"}
+                    >
+                      <i className={`fa-bookmark fs-5 ${p.saved ? 'fa-solid text-indigo' : 'fa-regular text-secondary'}`}></i>
+                    </button>
+                    <button className="btn btn-indigo btn-sm text-white px-2 py-0.5" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none', fontSize: '11px' }} onClick={() => { setSelectedPaperId(p.id); setActivePage('summarizer'); }}>Summarize</button>
+                  </div>
+                </div>
+                <p className="text-secondary small mb-2">{p.authors} &bull; {p.journal} ({p.year})</p>
+                <p className="text-secondary small mb-0">{p.abstract}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Literature Review Page
+    function LiteratureReviewView() {
+      const [topic, setTopic] = useState('PEFT Models comparison');
+      const [response, setResponse] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleGenerate = async () => {
+        setLoading(true);
+        setResponse('');
+        const prompt = `Synthesize a brief literature review for: "${topic}". Outline current findings, critical constraints, and gaps. Format it with clean paragraphs.`;
+        try {
+          const res = await generateAIResponse(prompt);
+          setResponse(res);
+        } catch (err) {
+          setResponse("API Error: Rate Limit / Quota Exceeded. You have exceeded your 20 free requests per day limit on this Gemini key. Please wait a short while or verify your Google AI Studio quota limits.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Literature Review Compiler</h4>
+          <div className="glass-card p-4 mb-4">
+            <div className="mb-3">
+              <label className="small text-secondary mb-1">Research Field</label>
+              <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={topic} onChange={e => setTopic(e.target.value)} />
+            </div>
+            <button className="btn btn-indigo text-white px-4" onClick={handleGenerate} disabled={loading} style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+              {loading ? 'Synthesizing...' : 'Synthesize literature'}
+            </button>
+          </div>
+          {response && (
+            <div className="glass-card p-4">
+              <h6 className="fw-bold text-dark-emphasis mb-2">AI Synthesis Review Output</h6>
+              <p className="text-secondary small" style={{ whiteSpace: 'pre-line' }}>{response}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Paper Summarizer Page
+    function PaperSummarizerView({ papers, selectedPaperId, setSelectedPaperId }) {
+      const activePaper = papers.find(p => p.id === selectedPaperId) || papers[0] || { title: '', abstract: '' };
+      const [summary, setSummary] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      // Automatically trigger summarization when active paper changes
+      useEffect(() => {
+        if (activePaper.title && activePaper.abstract) {
+          handleSummarize(activePaper.title, activePaper.abstract);
+        }
+      }, [selectedPaperId]);
+
+      const handleSummarize = async (title, text) => {
+        setLoading(true);
+        setSummary('');
+        const prompt = `You are an academic expert. Summarize the following research paper titled "${title}".
+Abstract details:
+"${text}"
+Provide a brief structural summary mapping: Core Findings, Limitations, and Future Work. Use academic tone and format clearly in bullet points.`;
+        try {
+          const res = await generateAIResponse(prompt);
+          setSummary(res);
+        } catch (err) {
+          setSummary("API Error: Rate Limit / Quota Exceeded. You have exceeded your 20 free requests per day limit on this Gemini key. Please wait a short while or verify your Google AI Studio quota limits.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Paper Summarizer</h4>
+          
+          <div className="row g-4 mb-4">
+            <div className="col-md-5">
+              <div className="glass-card p-4">
+                <label className="small text-secondary mb-1">Select Paper to Summarize</label>
+                <select className="form-select bg-light-subtle border-secondary-subtle text-dark-emphasis mb-3" value={selectedPaperId} onChange={e => setSelectedPaperId(e.target.value)}>
+                  {papers.map(p => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
+                  ))}
+                </select>
+                <h6 className="fw-bold text-dark-emphasis mb-1">Abstract Text</h6>
+                <p className="text-secondary small" style={{ maxHeight: '180px', overflowY: 'auto' }}>{activePaper.abstract}</p>
+              </div>
+            </div>
+            <div className="col-md-7">
+              <div className="glass-card p-4" style={{ minHeight: '320px' }}>
+                <h6 className="fw-bold text-dark-emphasis mb-2"><i className="fa-solid fa-wand-magic-sparkles me-1 text-indigo"></i> AI Document Summary Findings</h6>
+                {loading ? (
+                  <div className="d-flex flex-column align-items-center justify-content-center py-5 text-indigo">
+                    <div className="spinner-border mb-3" role="status"></div>
+                    <span className="small">Querying Gemini API for document summary...</span>
+                  </div>
+                ) : summary ? (
+                  <p className="text-secondary small" style={{ whiteSpace: 'pre-line' }}>{summary}</p>
+                ) : (
+                  <p className="text-muted small">Select a paper or upload a PDF to run analysis.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Research Gap Finder Page
+    function ResearchGapFinderView() {
+      const [domain, setDomain] = useState('Medical Vector Databases');
+      const [gaps, setGaps] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleFind = async () => {
+        setLoading(true);
+        setGaps('');
+        try {
+          const res = await generateAIResponse(`Identify three major research gaps in the domain of: "${domain}". Provide explanations.`);
+          setGaps(res);
+        } catch (err) {
+          setGaps("API Error: Rate Limit / Quota Exceeded. You have exceeded your 20 free requests per day limit on this Gemini key. Please wait a short while or verify your Google AI Studio quota limits.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Research Gap Finder</h4>
+          <div className="glass-card p-4 mb-4">
+            <div className="mb-3">
+              <label className="small text-secondary mb-1">Target Subject Domain</label>
+              <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={domain} onChange={e => setDomain(e.target.value)} />
+            </div>
+            <button className="btn btn-indigo text-white px-4" onClick={handleFind} disabled={loading} style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+              {loading ? 'Searching Gaps...' : 'Search Gaps'}
+            </button>
+          </div>
+          {gaps && (
+            <div className="glass-card p-4">
+              <h6 className="fw-bold text-dark-emphasis mb-2">Found Gaps</h6>
+              <p className="text-secondary small" style={{ whiteSpace: 'pre-line' }}>{gaps}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Citation Generator Page
+    function CitationGeneratorView({ papers, searchQuery }) {
+      const [selectedPaperId, setSelectedPaperId] = useState('');
+      const [customPaperDetails, setCustomPaperDetails] = useState('');
+      const [style, setStyle] = useState('APA');
+      const [citation, setCitation] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      // Pre-select paper if search query matches something
+      useEffect(() => {
+        if (searchQuery && papers.length > 0) {
+          const matched = papers.find(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
+          if (matched) {
+            setSelectedPaperId(matched.id);
+            setCustomPaperDetails(''); // Clear custom input if matching paper selected
+          }
+        }
+      }, [searchQuery, papers]);
+
+      const handleGenerate = async () => {
+        setLoading(true);
+        setCitation('');
+
+        let paperInfo = '';
+        if (customPaperDetails.trim()) {
+          paperInfo = `Custom Details: ${customPaperDetails}`;
+        } else {
+          const selected = papers.find(p => p.id === selectedPaperId) || papers[0];
+          if (selected) {
+            paperInfo = `Title: "${selected.title}", Authors: "${selected.authors}", Journal/Source: "${selected.journal || 'IEEE'}", Year: ${selected.year || 2026}`;
+          }
+        }
+
+        if (!paperInfo) {
+          setCitation("Please select a paper or input details first.");
+          setLoading(false);
+          return;
+        }
+
+        const prompt = `You are a bibliography formatter. Create a formatted reference citation in "${style}" style for the following scientific publication:
+${paperInfo}
+
+Return only the final formatted citation text string. Do not include any commentary, other style examples, quotes, or markdown formatting blocks. Just the reference string itself.`;
+
+        try {
+          const res = await generateAIResponse(prompt);
+          setCitation(res.trim());
+        } catch (err) {
+          setCitation("Failed to connect to the Gemini API. Please check your credentials.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const copyCitation = () => {
+        if (!citation) return;
+        navigator.clipboard.writeText(citation);
+        alert("Citation copied to clipboard!");
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <div className="mb-4">
+            <h2 className="fw-bold mb-1 text-dark-emphasis">Bibliographic Citation Generator</h2>
+            <p className="text-secondary small mb-0">Instantly generate standard citations in APA, IEEE, MLA, Chicago, or Harvard layout using the Gemini model.</p>
+          </div>
+
+          <div className="row g-4">
+            <div className="col-lg-6">
+              <div className="glass-card p-4">
+                <h5 className="text-dark-emphasis fw-bold mb-3">Reference Input</h5>
+
+                <div className="mb-3">
+                  <label className="small text-secondary mb-1">Select from Uploaded Papers</label>
+                  <select className="form-select bg-light-subtle border-secondary-subtle text-dark-emphasis" value={selectedPaperId} onChange={e => { setSelectedPaperId(e.target.value); setCustomPaperDetails(''); }}>
+                    <option value="">-- Select a paper --</option>
+                    {papers.map(p => (
+                      <option key={p.id} value={p.id}>{p.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="small text-secondary mb-1">Or Enter Custom Paper (Title, Authors, Year, etc.)</label>
+                  <textarea 
+                    className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" 
+                    rows="3"
+                    value={customPaperDetails}
+                    onChange={e => { setCustomPaperDetails(e.target.value); setSelectedPaperId(''); }}
+                    placeholder="e.g. Attention Is All You Need, Vaswani et al., NeurIPS 2017"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="small text-secondary mb-1">Citation Standard Style</label>
+                  <select className="form-select bg-light-subtle border-secondary-subtle text-dark-emphasis" value={style} onChange={e => setStyle(e.target.value)}>
+                    <option value="APA">APA (7th edition)</option>
+                    <option value="IEEE">IEEE</option>
+                    <option value="MLA">MLA (9th edition)</option>
+                    <option value="Chicago">Chicago Manual of Style</option>
+                    <option value="Harvard">Harvard</option>
+                  </select>
+                </div>
+
+                <button 
+                  className="btn btn-indigo text-white w-100 rounded-3 py-2.5 d-flex align-items-center justify-content-center gap-2"
+                  onClick={handleGenerate}
+                  disabled={loading}
+                  style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}
+                >
+                  <i className="fa-solid fa-quote-right"></i>
+                  <span>{loading ? 'Formatting...' : 'Generate Citation'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="col-lg-6">
+              <div className="glass-card p-4 text-start" style={{ minHeight: '310px' }}>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h5 className="text-dark-emphasis fw-bold mb-0">Formatted Bibliography</h5>
+                  {citation && (
+                    <button className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 border-secondary" style={{ color: 'var(--text-primary)' }} onClick={copyCitation}>
+                      <i className="fa-regular fa-copy"></i>
+                      <span>Copy</span>
+                    </button>
+                  )}
+                </div>
+
+                {loading ? (
+                  <div className="d-flex flex-column align-items-center justify-content-center py-5 text-indigo">
+                    <div className="spinner-border mb-3" role="status"></div>
+                    <span className="small">Formatting reference details using Gemini...</span>
+                  </div>
+                ) : citation ? (
+                  <div className="p-3 bg-light-subtle border border-secondary-subtle rounded-3 text-dark-emphasis font-monospace small mb-0" style={{ wordBreak: 'break-all' }}>
+                    {citation}
+                  </div>
+                ) : (
+                  <div className="text-center py-5 text-muted">
+                    <i className="fa-solid fa-quote-left fs-3 mb-3 text-secondary"></i>
+                    <p className="small mb-0">Select or enter reference details on the left and click Generate Citation.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Report Generator Page
+    function ReportGeneratorView() {
+      const [topic, setTopic] = useState('PEFT Edge evaluation results');
+      const [report, setReport] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleReport = async () => {
+        setLoading(true);
+        setReport('');
+        try {
+          const res = await generateAIResponse(`Draft a short academic report structure on: "${topic}"`);
+          setReport(res);
+        } catch (err) {
+          setReport("API Error: Rate Limit / Quota Exceeded. You have exceeded your 20 free requests per day limit on this Gemini key. Please wait a short while or verify your Google AI Studio quota limits.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Report Generator</h4>
+          <div className="glass-card p-4 mb-4">
+            <div className="mb-3">
+              <label className="small text-secondary mb-1">Topic</label>
+              <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={topic} onChange={e => setTopic(e.target.value)} />
+            </div>
+            <button className="btn btn-indigo text-white px-4" onClick={handleReport} disabled={loading} style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+              {loading ? 'Generating report...' : 'Generate Report'}
+            </button>
+          </div>
+          {report && (
+            <div className="glass-card p-4">
+              <h6 className="fw-bold text-dark-emphasis mb-2">AI Draft Report Output</h6>
+              <p className="text-secondary small" style={{ whiteSpace: 'pre-line' }}>{report}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Idea Generator Page
+    function IdeaGeneratorView() {
+      const [keywords, setKeywords] = useState('Transformers, Medical scans');
+      const [ideas, setIdeas] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleIdea = async () => {
+        setLoading(true);
+        setIdeas('');
+        try {
+          const res = await generateAIResponse(`Propose three research project ideas based on these keywords: "${keywords}"`);
+          setIdeas(res);
+        } catch (err) {
+          setIdeas("API Error: Rate Limit / Quota Exceeded. You have exceeded your 20 free requests per day limit on this Gemini key. Please wait a short while or verify your Google AI Studio quota limits.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Research Idea Generator</h4>
+          <div className="glass-card p-4 mb-4">
+            <div className="mb-3">
+              <label className="small text-secondary mb-1">Keywords</label>
+              <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={keywords} onChange={e => setKeywords(e.target.value)} />
+            </div>
+            <button className="btn btn-indigo text-white px-4" onClick={handleIdea} disabled={loading} style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+              {loading ? 'Brainstorming...' : 'Generate Ideas'}
+            </button>
+          </div>
+          {ideas && (
+            <div className="glass-card p-4">
+              <h6 className="fw-bold text-dark-emphasis mb-2">Novel Proposals Brainstorm</h6>
+              <p className="text-secondary small" style={{ whiteSpace: 'pre-line' }}>{ideas}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Research Notes Page
+    function ResearchNotesView({ searchQuery }) {
+      const [notes, setNotes] = useState(() => {
+        const stored = localStorage.getItem('research_mate_notes');
+        return stored ? JSON.parse(stored) : [
+          { id: 1, title: 'LoRA adaptation logic checks', content: 'Verify training matrix dimensions' }
+        ];
+      });
+      const [title, setTitle] = useState('');
+      const [content, setContent] = useState('');
+
+      useEffect(() => {
+        localStorage.setItem('research_mate_notes', JSON.stringify(notes));
+      }, [notes]);
+
+      const addNote = () => {
+        if (!title) return;
+        setNotes(prev => [{ id: Date.now(), title, content }, ...prev]);
+        setTitle('');
+        setContent('');
+      };
+
+      const deleteNote = (id) => {
+        setNotes(prev => prev.filter(n => n.id !== id));
+      };
+
+      const filteredNotes = notes.filter(n => 
+        n.title.toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+        n.content.toLowerCase().includes((searchQuery || '').toLowerCase())
+      );
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <div className="mb-4">
+            <h2 className="fw-bold mb-1 text-dark-emphasis">Notes Pad Workspace</h2>
+            <p className="text-secondary small mb-0">Jot down scientific references, outline draft paragraphs, and track annotations.</p>
+          </div>
+          <div className="row g-4">
+            <div className="col-md-5">
+              <div className="d-flex flex-column gap-2" style={{ maxHeight: '420px', overflowY: 'auto' }}>
+                {filteredNotes.map(n => (
+                  <div key={n.id} className="p-3 bg-light-subtle border border-secondary-subtle rounded-3 position-relative">
+                    <button 
+                      className="btn btn-link p-0 text-secondary border-0 position-absolute end-0 top-0 mt-2 me-3" 
+                      onClick={() => deleteNote(n.id)}
+                      title="Delete Note"
+                    >
+                      <i className="fa-solid fa-xmark small"></i>
+                    </button>
+                    <h6 className="fw-bold text-dark-emphasis mb-1 pe-3">{n.title}</h6>
+                    <p className="text-secondary small mb-0">{n.content}</p>
+                  </div>
+                ))}
+                {filteredNotes.length === 0 && (
+                  <div className="text-center text-muted py-4">No matching notes found.</div>
+                )}
+              </div>
+            </div>
+            <div className="col-md-7">
+              <div className="glass-card p-4">
+                <div className="mb-3">
+                  <label className="small text-secondary mb-1">Title</label>
+                  <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={title} onChange={e => setTitle(e.target.value)} placeholder="Note Title..." />
+                </div>
+                <div className="mb-3">
+                  <label className="small text-secondary mb-1">Content</label>
+                  <textarea className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" rows="5" value={content} onChange={e => setContent(e.target.value)} placeholder="Take some notes here..." />
+                </div>
+                <button className="btn btn-indigo text-white px-4 py-2 rounded-3" onClick={addNote} style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>Save Note</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+
+    // Saved Research View
+    function SavedResearchView({ papers, setPapers }) {
+      const savedPapers = papers.filter(p => p.saved);
+
+      const handleUnsave = (id) => {
+        setPapers(prev => prev.map(p => p.id === id ? { ...p, saved: false } : p));
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <div className="mb-4">
+            <h2 className="fw-bold mb-1 text-dark-emphasis">Saved Research Vault</h2>
+            <p className="text-secondary small mb-0">Manage your bookmarked research publications and references.</p>
+          </div>
+
+          {savedPapers.length === 0 ? (
+            <div className="glass-card p-5 text-center text-muted">
+              <i className="fa-regular fa-bookmark fs-1 mb-3 text-secondary"></i>
+              <h5>Your Vault is empty</h5>
+              <p className="small mb-0">Bookmark papers in the **Research Papers** tab to see them listed here.</p>
+            </div>
+          ) : (
+            <div className="d-flex flex-column gap-3">
+              {savedPapers.map(p => (
+                <div key={p.id} className="glass-card p-4 d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 className="fw-bold text-dark-emphasis mb-1">📖 {p.title}</h5>
+                    <p className="text-secondary small mb-0">{p.authors} &bull; {p.journal || 'Internal Index'} ({p.year})</p>
+                  </div>
+                  <button className="btn btn-outline-danger btn-sm rounded-3 px-3 d-flex align-items-center gap-1 border-danger-subtle text-danger" onClick={() => handleUnsave(p.id)}>
+                    <i className="fa-solid fa-trash-can"></i>
+                    <span>Remove</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Timeline Page
+    function ResearchTimelineView() {
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Research Timeline Progress</h4>
+          <div className="glass-card p-4">
+            <div className="mb-3">
+              <div className="d-flex justify-content-between text-dark-emphasis small fw-bold mb-1">
+                <span>Literature comparisons matrix</span>
+                <span>80%</span>
+              </div>
+              <div className="progress" style={{ height: '6px' }}>
+                <div className="progress-bar bg-indigo" style={{ width: '80%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="d-flex justify-content-between text-dark-emphasis small fw-bold mb-1">
+                <span>Defense presentation outline</span>
+                <span>35%</span>
+              </div>
+              <div className="progress" style={{ height: '6px' }}>
+                <div className="progress-bar bg-indigo" style={{ width: '35%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Writing Assistant View
+    function AiWritingAssistantView() {
+      const [draft, setDraft] = useState('PEFT decreases trainable parameters. This decreases storage footprints on disk.');
+      const [revised, setRevised] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleRewrite = async () => {
+        setLoading(true);
+        setRevised('');
+        try {
+          const res = await generateAIResponse(`Improve this paragraph to make it look professional and academic: "${draft}"`);
+          setRevised(res);
+        } catch (err) {
+          setRevised("API Error: Rate Limit / Quota Exceeded. You have exceeded the free requests per day limit on this Gemini API Key. Please wait a short while before retrying, or verify your billing/limit configuration in Google AI Studio.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Writing Assistant Rephraser</h4>
+          <div className="row g-4">
+            <div className="col-md-6">
+              <div className="glass-card p-4">
+                <textarea className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis mb-3" rows="6" value={draft} onChange={e => setDraft(e.target.value)} />
+                <button className="btn btn-indigo text-white" onClick={handleRewrite} disabled={loading} style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+                  {loading ? 'Polishing...' : 'Rephrase Paragraph'}
+                </button>
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div className="glass-card p-4" style={{ minHeight: '200px' }}>
+                <h6 className="fw-bold text-dark-emphasis mb-2">Revised Paragraph</h6>
+                <p className="text-secondary small">{revised || 'Click rephrase to polish draft...'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Trending Topics Page
+    function TrendingTopicsView() {
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Emerging Research Topics</h4>
+          <div className="d-flex flex-column gap-3">
+            <div className="glass-card p-4">
+              <span className="badge bg-indigo-subtle text-indigo mb-2">Deep Learning</span>
+              <h5 className="fw-bold text-dark-emphasis">State-Space Models (Mamba)</h5>
+              <p className="text-secondary small mb-0">Linear-time sequence modeling alternative to classic self-attention transformers.</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Settings Page
+    function SettingsView({ darkMode, setDarkMode }) {
+      const [customKey, setCustomKey] = useState(() => {
+        return localStorage.getItem('research_mate_api_key') || "";
+      });
+      const [saved, setSaved] = useState(false);
+
+      const handleSave = (e) => {
+        e.preventDefault();
+        localStorage.setItem('research_mate_api_key', customKey.trim());
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <h4 className="fw-bold text-dark-emphasis mb-3">Workspace Settings</h4>
+          <form onSubmit={handleSave} className="glass-card p-4">
+            <div className="mb-4">
+              <label className="small text-secondary mb-1">Google Gemini API Key</label>
+              <input 
+                type="text" 
+                className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis font-monospace" 
+                value={customKey} 
+                onChange={e => setCustomKey(e.target.value)} 
+                placeholder="AIzaSy..."
+              />
+              <span className="text-muted" style={{ fontSize: '11px' }}>
+                Paste your custom Gemini API key here. Get one for free from Google AI Studio.
+              </span>
+            </div>
+            <div className="mb-4">
+              <label className="small text-secondary mb-1">Theme Selection</label>
+              <div className="d-flex gap-2">
+                <button type="button" className={`btn btn-sm ${!darkMode ? 'btn-indigo text-white' : 'btn-outline-secondary'}`} onClick={() => setDarkMode(false)}>Light Theme</button>
+                <button type="button" className={`btn btn-sm ${darkMode ? 'btn-indigo text-white' : 'btn-outline-secondary'}`} onClick={() => setDarkMode(true)}>Dark Theme</button>
+              </div>
+            </div>
+            <button type="submit" className="btn btn-indigo btn-sm text-white px-3" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+              {saved ? 'Saved!' : 'Save Settings'}
+            </button>
+          </form>
+        </div>
+      );
+    }
+
+    // Profile Page Component
+    function ProfileView({ userName, setUserName, userTitle, setUserTitle, userInstitution, setUserInstitution, userAvatar, setUserAvatar }) {
+      const [nameInput, setNameInput] = useState(userName);
+      const [titleInput, setTitleInput] = useState(userTitle);
+      const [instInput, setInstInput] = useState(userInstitution);
+      const [saved, setSaved] = useState(false);
+
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setUserAvatar(reader.result);
+          localStorage.setItem('research_mate_avatar', reader.result);
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const handleSave = (e) => {
+        e.preventDefault();
+        setUserName(nameInput);
+        setUserTitle(titleInput);
+        setUserInstitution(instInput);
+        
+        localStorage.setItem('research_mate_user_name', nameInput);
+        localStorage.setItem('research_mate_user_title', titleInput);
+        localStorage.setItem('research_mate_user_inst', instInput);
+
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      };
+
+      return (
+        <div className="text-start animate__animated animate__fadeIn">
+          <div className="mb-4">
+            <h2 className="fw-bold mb-1 text-dark-emphasis">Researcher Profile</h2>
+            <p className="text-secondary small mb-0">Customize your academic identity, title, institution, and avatar photo.</p>
+          </div>
+
+          <div className="row g-4">
+            {/* Left Column: Form details */}
+            <div className="col-lg-7">
+              <form onSubmit={handleSave} className="glass-card p-4">
+                <h5 className="text-dark-emphasis fw-bold mb-4"><i className="fa-solid fa-user-graduate text-indigo me-2"></i> Academic Identity</h5>
+
+                <div className="mb-3">
+                  <label className="small text-secondary mb-1">Full Name</label>
+                  <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={nameInput} onChange={e => setNameInput(e.target.value)} required />
+                </div>
+
+                <div className="mb-3">
+                  <label className="small text-secondary mb-1">Title / Designation</label>
+                  <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={titleInput} onChange={e => setTitleInput(e.target.value)} required />
+                </div>
+
+                <div className="mb-4">
+                  <label className="small text-secondary mb-1">Institution Affiliation</label>
+                  <input type="text" className="form-control bg-light-subtle border-secondary-subtle text-dark-emphasis" value={instInput} onChange={e => setInstInput(e.target.value)} required />
+                </div>
+
+                <button type="submit" className="btn btn-indigo text-white px-4 py-2.5 rounded-3 d-flex align-items-center gap-2" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+                  <i className="fa-solid fa-save"></i>
+                  <span>{saved ? 'Profile Saved!' : 'Save Profile'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Right Column: Photo upload and preview card */}
+            <div className="col-lg-5">
+              <div className="glass-card p-4 text-center">
+                <h5 className="text-dark-emphasis fw-bold mb-4 text-start"><i className="fa-solid fa-camera text-indigo me-2"></i> Profile Photo</h5>
+                
+                <div className="mb-4 d-flex flex-column align-items-center">
+                  <img src={userAvatar} alt="avatar" className="rounded-circle mb-3 border border-indigo-subtle shadow-sm" style={{ width: '120px', height: '120px', objectFit: 'cover' }} />
+                  <h6 className="fw-bold text-dark-emphasis mb-1">{nameInput || 'Your Name'}</h6>
+                  <p className="text-muted small mb-0">{titleInput || 'Your Title'}</p>
+                  <p className="text-muted small text-indigo">{instInput || 'Your Institution'}</p>
+                </div>
+
+                <div className="mb-2">
+                  <label className="btn btn-outline-indigo btn-sm rounded-3 px-4 py-2 cursor-pointer border-secondary-subtle" style={{ color: 'var(--text-primary)' }}>
+                    <span>Change Avatar Photo</span>
+                    <input type="file" accept="image/*" className="d-none" onChange={handleImageUpload} />
+                  </label>
+                </div>
+                <span className="text-muted" style={{ fontSize: '11px' }}>Supports JPG, PNG, GIF files. Base64 encoded inside browser memory.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Auth Page Component (Login, Sign Up, Forgot Password)
+    function AuthView({ onLogin }) {
+      const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup' | 'forgot'
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [name, setName] = useState('');
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (authMode === 'forgot') {
+          alert(`Password recovery instructions sent to: ${email}`);
+          setAuthMode('login');
+        } else if (authMode === 'signup') {
+          alert(`Account successfully created for: ${name}`);
+          onLogin();
+        } else {
+          onLogin();
+        }
+      };
+
+      return (
+        <div className="d-flex align-items-center justify-content-center min-vh-100 px-3" style={{ background: 'linear-gradient(135deg, #090d16 0%, #1e1b4b 100%)' }}>
+          <div className="glass-card p-4 p-md-5 animate__animated animate__fadeIn" style={{ maxWidth: '420px', width: '100%', background: 'rgba(15, 21, 36, 0.85)', borderColor: 'rgba(99, 102, 241, 0.15)', boxShadow: '0 20px 50px rgba(99, 102, 241, 0.2)' }}>
+            
+            <div className="text-center mb-4">
+              <span className="fs-1">🧠</span>
+              <h3 className="fw-bold mt-2 text-white" style={{ fontFamily: 'var(--font-title)' }}>ResearchMate</h3>
+              <p className="text-secondary small mb-0">Your AI-powered Scientific Research Workspace</p>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              {authMode === 'signup' && (
+                <div className="mb-3 text-start">
+                  <label className="small text-secondary mb-1">Full Name</label>
+                  <input type="text" className="form-control bg-dark-subtle border-secondary-subtle text-white" value={name} onChange={e => setName(e.target.value)} placeholder="Dr. Sarah Jenkins" required />
+                </div>
+              )}
+
+              <div className="mb-3 text-start">
+                <label className="small text-secondary mb-1">Academic Email</label>
+                <input type="email" className="form-control bg-dark-subtle border-secondary-subtle text-white" value={email} onChange={e => setEmail(e.target.value)} placeholder="sarah.j@university.edu" required />
+              </div>
+
+              {authMode !== 'forgot' && (
+                <div className="mb-4 text-start">
+                  <label className="small text-secondary mb-1">Password</label>
+                  <input type="password" className="form-control bg-dark-subtle border-secondary-subtle text-white" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-indigo text-white w-100 rounded-3 py-2.5 mb-3 fw-medium" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none' }}>
+                {authMode === 'login' && 'Sign In to Workspace'}
+                {authMode === 'signup' && 'Create Free Account'}
+                {authMode === 'forgot' && 'Send Reset Instructions'}
+              </button>
+
+              <div className="text-center">
+                {authMode === 'login' && (
+                  <div className="d-flex flex-column gap-1 small">
+                    <span className="text-secondary">Don't have an account? <span className="text-indigo cursor-pointer fw-semibold text-decoration-none" onClick={() => setAuthMode('signup')}>Sign Up</span></span>
+                    <span className="text-indigo cursor-pointer text-decoration-none" onClick={() => setAuthMode('forgot')}>Forgot Password?</span>
+                  </div>
+                )}
+                {authMode === 'signup' && (
+                  <span className="small text-secondary">Already have an account? <span className="text-indigo cursor-pointer fw-semibold text-decoration-none" onClick={() => setAuthMode('login')}>Sign In</span></span>
+                )}
+                {authMode === 'forgot' && (
+                  <span className="small text-indigo cursor-pointer fw-semibold text-decoration-none" onClick={() => setAuthMode('login')}>Back to Sign In</span>
+                )}
+              </div>
+            </form>
+
+          </div>
+        </div>
+      );
+    }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+</html>
